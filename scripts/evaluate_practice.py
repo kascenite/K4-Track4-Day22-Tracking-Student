@@ -28,14 +28,16 @@ from pathlib import Path
 PRACTICE_VIDEO = "video_1"
 
 
-def _patch_numpy_aliases() -> None:
-    """TrackEval còn gọi np.float / np.int (đã bỏ từ NumPy 1.24)."""
-    import numpy as np
-
-    if not hasattr(np, "float"):
-        np.float = float  # type: ignore[attr-defined]
-    if not hasattr(np, "int"):
-        np.int = int  # type: ignore[attr-defined]
+# TrackEval còn gọi np.float / np.int (đã bỏ từ NumPy 1.24). TrackEval chạy trong
+# tiến trình con, nên alias phải được vá ngay trong tiến trình đó.
+_NUMPY_ALIAS_BOOTSTRAP = (
+    "import runpy, sys, numpy as np\n"
+    "np.float = float\n"
+    "np.int = int\n"
+    "script = sys.argv[1]\n"
+    "sys.argv = sys.argv[1:]\n"
+    "runpy.run_path(script, run_name='__main__')\n"
+)
 
 
 def _load_eval_config(lab_data_root: Path) -> dict:
@@ -104,7 +106,7 @@ def run_trackeval(trackeval_root: Path, run_name: str, benchmark: str, split: st
         subprocess.CalledProcessError: Khi TrackEval thoát với mã khác 0.
     """
     cmd = [
-        sys.executable,
+        sys.executable, "-c", _NUMPY_ALIAS_BOOTSTRAP,
         str(trackeval_root / "scripts" / "run_mot_challenge.py"),
         "--GT_FOLDER", str(trackeval_root / "data" / "gt" / "mot_challenge"),
         "--TRACKERS_FOLDER", str(trackeval_root / "data" / "trackers" / "mot_challenge"),
@@ -125,7 +127,6 @@ def main() -> None:
     Raises:
         SystemExit: Khi file nộp không phải ``video_1.txt``.
     """
-    _patch_numpy_aliases()
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--trackeval-root", required=True, type=Path)
     parser.add_argument("--lab-data-root", required=True, type=Path)
