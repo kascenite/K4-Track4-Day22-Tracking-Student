@@ -1,5 +1,7 @@
 # Báo cáo lab: chọn tracker cho 5 video
 
+**Thành viên:** Lương Sỹ Khánh - 2A202602715
+
 Detector cố định: `yolo26n.pt`, ảnh 640 px, lớp người, Re-ID `osnet_x0_25_msmt17.pt`. Không đổi các mục này trong bài nộp chính.
 
 Các video `video_2` đến `video_5` không có nhãn; nhận xét dưới đây dựa trên video mẫu và thống kê kết quả, không phải điểm đánh giá chính xác.
